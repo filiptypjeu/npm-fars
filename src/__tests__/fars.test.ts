@@ -47,7 +47,7 @@ test('bookings bookables', async () => {
     }
     testObject(a[0]);
   }
-});
+}, 10000);
 
 test('bookings allparameters', async () => {
   for (let bookable of myBookables) {
