@@ -13,7 +13,7 @@ const testObject = (b: IFarsBooking) => {
   expect(b.user.first_name).toBeDefined();
   expect(b.user.last_name).toBeDefined();
   expect(b.user.username).toBeDefined();
-}
+};
 
 test('bookings nourl', async () => {
   await expect(bookings()).rejects.toThrowError();
@@ -29,12 +29,12 @@ test('bookings', async () => {
 }, 10000);
 
 test('bookings start', async () => {
-  const a = await bookings(new Date("2019-10-01"));
+  const a = await bookings(new Date('2019-10-01'));
   testObject(a[0]);
 }, 10000);
 
 test('bookings end', async () => {
-  const a = await bookings(undefined, new Date("2019-10-01"));
+  const a = await bookings(undefined, new Date('2019-10-01'));
   testObject(a[0]);
 }, 10000);
 
@@ -51,13 +51,13 @@ test('bookings bookables', async () => {
 
 test('bookings allparameters', async () => {
   for (let bookable of myBookables) {
-    const a = await bookings(new Date("2019-01-01"), new Date("2019-12-31"), bookable);
+    const a = await bookings(new Date('2019-01-01'), new Date('2019-12-31'), bookable);
     if (a.length === 0) {
       console.log(bookable);
       console.log(a);
     }
     testObject(a[0]);
-  };
+  }
 }, 10000);
 
 test('bookings specific', async () => {

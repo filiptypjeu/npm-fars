@@ -25,10 +25,12 @@ export interface IFarsBooking {
 }
 
 const getURL = (dateFrom?: Date, dateTo?: Date, bookable?: string): string => {
-  return `${farsBaseURL}/bookings?`
-    + `bookable=${bookable ? bookable : ''}`
-    + `&after=${dateFrom ? moment(dateFrom).format('YYYY-MM-DDTHH:mm:ss') : ''}`
-    + `&before=${dateTo ? moment(dateTo).format('YYYY-MM-DDTHH:mm:ss') : ''}`;
+  return (
+    `${farsBaseURL}/bookings?` +
+    `bookable=${bookable ? bookable : ''}` +
+    `&after=${dateFrom ? moment(dateFrom).format('YYYY-MM-DDTHH:mm:ss') : ''}` +
+    `&before=${dateTo ? moment(dateTo).format('YYYY-MM-DDTHH:mm:ss') : ''}`
+  );
 };
 
 /**
