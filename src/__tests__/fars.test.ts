@@ -25,43 +25,36 @@ test('setFarsURL', async () => {
 
 test('bookings', async () => {
   const a = await bookings();
-  testObject(a[0]);
+  testObject(a.result[0]);
 }, 10000);
 
 test('bookings start', async () => {
   const a = await bookings(new Date('2019-10-01'));
-  testObject(a[0]);
+  testObject(a.result[0]);
 }, 10000);
 
 test('bookings end', async () => {
   const a = await bookings(undefined, new Date('2019-10-01'));
-  testObject(a[0]);
+  testObject(a.result[0]);
 }, 10000);
 
 test('bookings bookables', async () => {
   for (let bookable of myBookables) {
     const a = await bookings(undefined, undefined, bookable);
-    if (a.length === 0) {
-      console.log(bookable);
-      console.log(a);
-    }
-    testObject(a[0]);
+    testObject(a.result[0]);
   }
 }, 10000);
 
 test('bookings allparameters', async () => {
   for (let bookable of myBookables) {
     const a = await bookings(new Date('2019-01-01'), new Date('2019-12-31'), bookable);
-    if (a.length === 0) {
-      console.log(bookable);
-      console.log(a);
-    }
-    testObject(a[0]);
+
+    testObject(a.result[0]);
   }
 }, 10000);
 
 test('bookings specific', async () => {
   const a = await bookings(myTestparameters.dateFrom, myTestparameters.dateTo, myTestparameters.bookable);
-  expect(a).toHaveLength(1);
-  expect(a[0]).toEqual(myTestparameters.result);
+  expect(a.result).toHaveLength(1);
+  expect(a.result[0]).toEqual(myTestparameters.result);
 }, 10000);
