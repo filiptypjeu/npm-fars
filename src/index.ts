@@ -24,6 +24,14 @@ export interface IFarsBooking {
   repeatgroup: number | null;
 }
 
+interface IFarsSearchResult {
+  start?: Date;
+  end?: Date;
+  bookable?: string;
+  result: IFarsBooking[];
+  url: string;
+}
+
 const getURL = (dateFrom?: Date, dateTo?: Date, bookable?: string): string => {
   return (
     `${farsBaseURL}/bookings?` +
@@ -46,19 +54,25 @@ export const setFarsURL = (url: string) => (farsBaseURL = url);
  * @param {Date | undefined} dateFrom - The start date from which to search bookings.
  * @param {Date | undefined} dateTo - The end date to which to search bookings.
  * @param {string | undefined} room - The 'bookable' in string format.
- *
- * @returns An array of bookings.
  */
-export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): Promise<IFarsBooking[]> => {
+export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): Promise<IFarsSearchResult> => {
   if (!farsBaseURL) {
     return Promise.reject(new Error('The base URL for the API need to be set with setUrl(url).'));
   }
 
+  const url = getURL(dateFrom, dateTo, room);
+
   return rp
-    .get(getURL(dateFrom, dateTo, room))
+    .get(url)
     .then(body => {
       const b: IFarsBooking[] = JSON.parse(body);
-      return b;
+      return {
+          start: dateFrom,
+          end: dateTo,
+          bookable: room,
+          result: b,
+          url: url,
+        };
     })
     .catch(e => {
       return Promise.reject(e);
