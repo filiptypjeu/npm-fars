@@ -1,4 +1,4 @@
-import { bookings, setURL, IFarsBooking } from '../index';
+import { bookings, setFarsURL, IFarsBooking } from '../index';
 import { myBaseURL, myBookables, myTestparameters } from './variables/fars.test_variables';
 
 const testObject = (b: IFarsBooking) => {
@@ -19,8 +19,8 @@ test('bookings nourl', async () => {
   await expect(bookings()).rejects.toThrowError();
 }, 10000);
 
-test('setURL', async () => {
-  expect(setURL(myBaseURL)).toEqual(myBaseURL);
+test('setFarsURL', async () => {
+  expect(setFarsURL(myBaseURL)).toEqual(myBaseURL);
 }, 10000);
 
 test('bookings', async () => {

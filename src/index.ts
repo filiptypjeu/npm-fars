@@ -38,7 +38,7 @@ const getURL = (dateFrom?: Date, dateTo?: Date, bookable?: string): string => {
  *
  * @param url - URL for the API that shuld be used in future requests.
  */
-export const setURL = (url: string) => (farsBaseURL = url);
+export const setFarsURL = (url: string) => (farsBaseURL = url);
 
 /**
  * Request bookings for a specific room and for a specific time.
