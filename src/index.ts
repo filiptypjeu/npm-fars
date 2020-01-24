@@ -67,12 +67,12 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): P
     .then(body => {
       const b: IFarsBooking[] = JSON.parse(body);
       return {
-          start: dateFrom,
-          end: dateTo,
-          bookable: room,
-          result: b,
-          url: url,
-        };
+        start: dateFrom,
+        end: dateTo,
+        bookable: room,
+        result: b,
+        url,
+      };
     })
     .catch(e => {
       return Promise.reject(e);
@@ -91,19 +91,19 @@ export const bookingsFromNow = async (days: number, room?: string): Promise<IFar
   }
 };
 
-export const groupByBookable = (bookings: IFarsBooking[]) => {
+export const groupByBookable = (reservations: IFarsBooking[]) => {
   const m = new Map<number, IFarsBooking[]>();
-  bookings.forEach(f => {
+  reservations.forEach(f => {
     m.set(f.bookable, (m.get(f.bookable) || []).concat(f));
   });
 
   return m;
 };
 
-export const groupByDate = (bookings: IFarsBooking[]) => {
+export const groupByDate = (reservations: IFarsBooking[]) => {
   const m = new Map<string, IFarsBooking[]>();
-  bookings.forEach(f => {
-    const startDate = moment(new Date(f.start)).format("YYYY-MM-DD");
+  reservations.forEach(f => {
+    const startDate = moment(new Date(f.start)).format('YYYY-MM-DD');
     m.set(startDate, (m.get(startDate) || []).concat(f));
   });
 
