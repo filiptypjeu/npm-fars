@@ -78,3 +78,34 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): P
       return Promise.reject(e);
     });
 };
+
+export const bookingsFromNow = async (days: number, room?: string): Promise<IFarsSearchResult> => {
+  const d1 = new Date();
+  const d2 = new Date(d1);
+  d2.setDate(d2.getDate() + days);
+
+  if (d1 < d2) {
+    return bookings(d1, d2, room);
+  } else {
+    return bookings(d2, d1, room);
+  }
+};
+
+export const groupByBookable = (bookings: IFarsBooking[]) => {
+  const m = new Map<number, IFarsBooking[]>();
+  bookings.forEach(f => {
+    m.set(f.bookable, (m.get(f.bookable) || []).concat(f));
+  });
+
+  return m;
+};
+
+export const groupByDate = (bookings: IFarsBooking[]) => {
+  const m = new Map<string, IFarsBooking[]>();
+  bookings.forEach(f => {
+    const startDate = moment(new Date(f.start)).format("YYYY-MM-DD");
+    m.set(startDate, (m.get(startDate) || []).concat(f));
+  });
+
+  return m;
+};
