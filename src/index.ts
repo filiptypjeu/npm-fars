@@ -1,7 +1,12 @@
-import moment = require('moment');
-import rp = require('request-promise');
+import cheerio from "cheerio";
+import moment = require("moment");
+import rp = require("request-promise");
 
-let farsBaseURL: string = '';
+let farsBaseURL: string = "";
+let farsLoginPath: string = "";
+let farsApiPath: string = "";
+let farsUsername: string = "";
+let farsPassword: string = "";
 
 interface IFarsUser {
   username: string;
@@ -34,19 +39,55 @@ interface IFarsSearchResult {
 
 const getURL = (dateFrom?: Date, dateTo?: Date, bookable?: string): string => {
   return (
-    `${farsBaseURL}/bookings?` +
-    `bookable=${bookable ? bookable : ''}` +
-    `&after=${dateFrom ? moment(dateFrom).format('YYYY-MM-DDTHH:mm:ss') : ''}` +
-    `&before=${dateTo ? moment(dateTo).format('YYYY-MM-DDTHH:mm:ss') : ''}`
+    `${farsApiPath}bookings?` +
+    `bookable=${bookable ? bookable : ""}` +
+    `&after=${dateFrom ? moment(dateFrom).format("YYYY-MM-DDTHH:mm:ss") : ""}` +
+    `&before=${dateTo ? moment(dateTo).format("YYYY-MM-DDTHH:mm:ss") : ""}&format=json`
   );
 };
 
+const farsLogin = async (next: string) => {
+  if (!farsUsername) {
+    return Promise.reject(new Error("No username set."));
+  }
+
+  if (!farsPassword) {
+    return Promise.reject(new Error("No password set."));
+  }
+
+  return rp({
+    method: "GET",
+    uri: farsBaseURL + farsLoginPath,
+    followAllRedirects: true,
+    jar: true,
+  }).then(body => {
+    const $ = cheerio.load(body);
+    const token = $('[name="csrfmiddlewaretoken"]').val();
+
+    return rp({
+      method: "POST",
+      uri: farsBaseURL + farsLoginPath,
+      followAllRedirects: true,
+      jar: true,
+      form: { username: farsUsername, password: farsPassword, csrfmiddlewaretoken: token, next },
+    });
+  });
+};
+
 /**
- * Sets the API URL.
- *
- * @param url - URL for the API that shuld be used in future requests.
+ * @param {string} url - The base URL for FARS, with no ending '/'
+ * @param {string | undefined} username - The login username, if authenication is needed.
+ * @param {string | undefined} password - The login password, if authenication is needed.
+ * @param {string | undefined} loginPath - Set a specific login path. The default is /login/.
+ * @param {string | undefined} apiPath - Set a specific API path. The default is /api/.
  */
-export const setFarsURL = (url: string) => (farsBaseURL = url);
+export const setFarsParams = (url: string, username?: string, password?: string, loginPath?: string, apiPath?: string) => {
+  farsBaseURL = url;
+  farsLoginPath = loginPath ? loginPath : "/login/";
+  farsApiPath = apiPath ? apiPath : "/api/";
+  farsUsername = username || "";
+  farsPassword = password || "";
+};
 
 /**
  * Request bookings for a specific room and for a specific time.
@@ -55,15 +96,20 @@ export const setFarsURL = (url: string) => (farsBaseURL = url);
  * @param {Date | undefined} dateTo - The end date to which to search bookings.
  * @param {string | undefined} room - The 'bookable' in string format.
  */
-export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): Promise<IFarsSearchResult> => {
+export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): Promise<any> => {
   if (!farsBaseURL) {
-    return Promise.reject(new Error('The base URL for the API need to be set with setUrl(url).'));
+    return Promise.reject(new Error("No URL set."));
   }
 
-  const url = getURL(dateFrom, dateTo, room);
+  const path = getURL(dateFrom, dateTo, room);
+  const url = farsBaseURL + path;
 
-  return rp
-    .get(url)
+  return rp({
+    method: "GET",
+    uri: url,
+    followAllRedirects: true,
+    jar: true,
+  })
     .then(body => {
       const b: IFarsBooking[] = JSON.parse(body);
       return {
@@ -74,8 +120,26 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): P
         url,
       };
     })
-    .catch(e => {
-      return Promise.reject(e);
+    .catch(async e => {
+      // Check if login is required
+      if (e.statusCode !== 403) {
+        return Promise.reject(e);
+      }
+
+      return farsLogin(path)
+        .then(body => {
+          const b: IFarsBooking[] = JSON.parse(body);
+          return {
+            start: dateFrom,
+            end: dateTo,
+            bookable: room,
+            result: b,
+            url,
+          };
+        })
+        .catch(async error => {
+          return Promise.reject(error);
+        });
     });
 };
 
@@ -103,7 +167,7 @@ export const groupByBookable = (reservations: IFarsBooking[]) => {
 export const groupByDate = (reservations: IFarsBooking[]) => {
   const m = new Map<string, IFarsBooking[]>();
   reservations.forEach(f => {
-    const startDate = moment(new Date(f.start)).format('YYYY-MM-DD');
+    const startDate = moment(new Date(f.start)).format("YYYY-MM-DD");
     m.set(startDate, (m.get(startDate) || []).concat(f));
   });
 
