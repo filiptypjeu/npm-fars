@@ -90,18 +90,18 @@ export const setFarsParams = (url: string, username?: string, password?: string,
 };
 
 /**
- * Request bookings for a specific room and for a specific time.
+ * Request bookings for a specific bookable and for a specific time.
  *
  * @param {Date | undefined} dateFrom - The start date from which to search bookings.
  * @param {Date | undefined} dateTo - The end date to which to search bookings.
- * @param {string | undefined} room - The 'bookable' in string format.
+ * @param {string | undefined} bookable - The 'bookable' in string format.
  */
-export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): Promise<any> => {
+export const bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string): Promise<any> => {
   if (!farsBaseURL) {
     return Promise.reject(new Error("No URL set."));
   }
 
-  const path = getURL(dateFrom, dateTo, room);
+  const path = getURL(dateFrom, dateTo, bookable);
   const url = farsBaseURL + path;
 
   return rp({
@@ -115,7 +115,7 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): P
       return {
         start: dateFrom,
         end: dateTo,
-        bookable: room,
+        bookable: bookable,
         result: b,
         url,
       };
@@ -132,7 +132,7 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): P
           return {
             start: dateFrom,
             end: dateTo,
-            bookable: room,
+            bookable: bookable,
             result: b,
             url,
           };
@@ -143,15 +143,15 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, room?: string): P
     });
 };
 
-export const bookingsFromNow = async (days: number, room?: string): Promise<IFarsSearchResult> => {
+export const bookingsFromNow = async (days: number, bookable?: string): Promise<IFarsSearchResult> => {
   const d1 = new Date();
   const d2 = new Date(d1);
   d2.setDate(d2.getDate() + days);
 
   if (d1 < d2) {
-    return bookings(d1, d2, room);
+    return bookings(d1, d2, bookable);
   } else {
-    return bookings(d2, d1, room);
+    return bookings(d2, d1, bookable);
   }
 };
 
