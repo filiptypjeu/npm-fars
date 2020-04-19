@@ -115,7 +115,7 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string
       return {
         start: dateFrom,
         end: dateTo,
-        bookable: bookable,
+        bookable,
         result: b,
         url,
       };
@@ -132,7 +132,7 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string
           return {
             start: dateFrom,
             end: dateTo,
-            bookable: bookable,
+            bookable,
             result: b,
             url,
           };

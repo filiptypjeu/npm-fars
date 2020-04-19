@@ -70,7 +70,9 @@ test("bookings allparameters", async () => {
 }, 10000);
 
 test("bookings specific", async () => {
-  if (!myTestparameters.runThisTest) { return; }
+  if (!myTestparameters.runThisTest) {
+    return;
+  }
 
   const a = await bookings(myTestparameters.dateFrom, myTestparameters.dateTo, myTestparameters.bookable);
   expect(a.result).toHaveLength(1);
