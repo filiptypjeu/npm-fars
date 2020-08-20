@@ -13,8 +13,8 @@
     "postversion": "git push && git push --tags",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
-    "preversion": "npm run lint",
-    "test": "jest --config jestconfig.json",
+    "preversion": "npm run format && npm run lint-fix",
+    "test": "jest --config jestconfig.json --coverage",
     "version": "npm run format && git add -A src"
   },
   "author": "Filip Stenbacka",
