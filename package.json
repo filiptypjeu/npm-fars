@@ -21,7 +21,7 @@
   "license": "ISC",
   "types": "dist/index.d.ts",
   "devDependencies": {
-    "@types/cheerio": "^0.22.16",
+    "@types/cheerio": "^0.22.21",
     "@types/jest": "^24.9.1",
     "@types/moment": "^2.13.0",
     "@types/request-promise": "^4.1.46",
@@ -30,7 +30,7 @@
     "ts-jest": "^24.3.0",
     "tslint": "^5.20.1",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.9.7"
   },
   "repository": {
     "type": "git",
@@ -39,8 +39,8 @@
   "homepage": "https://github.com/filiptypjeu/npm-fars",
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
-    "moment": "^2.24.0",
-    "request-promise": "^4.2.5"
+    "moment": "^2.27.0",
+    "request-promise": "^4.2.6"
   },
   "files": [
     "dist/**/*"
