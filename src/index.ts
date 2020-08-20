@@ -1,6 +1,6 @@
 import cheerio from "cheerio";
-import moment = require("moment");
-import rp = require("request-promise");
+import moment from "moment";
+import rp from "request-promise";
 
 let farsBaseURL: string = "";
 let farsLoginPath: string = "";
@@ -143,6 +143,12 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string
     });
 };
 
+/**
+ * Get FARS bookings starting from right now.
+ *
+ * @param days The amount of days forward/backwards to search for bookings.
+ * @param bookable The bookable.
+ */
 export const bookingsFromNow = async (days: number, bookable?: string): Promise<IFarsSearchResult> => {
   const d1 = new Date();
   const d2 = new Date(d1);
@@ -155,6 +161,12 @@ export const bookingsFromNow = async (days: number, bookable?: string): Promise<
   }
 };
 
+/**
+ * Get FARS bookings starting from today at 00:00:00.
+ *
+ * @param days The amount of days forward/backwards to search for bookings.
+ * @param bookable The bookable.
+ */
 export const bookingsFromToday = async (days: number, bookable?: string): Promise<IFarsSearchResult> => {
   const d1 = new Date();
   d1.setHours(0);
@@ -174,7 +186,12 @@ export const bookingsFromToday = async (days: number, bookable?: string): Promis
   return bookings(d1, d2, bookable);
 };
 
-export const groupByBookable = (reservations: IFarsBooking[]) => {
+/**
+ * Helper method to group bookings by the bookable.
+ *
+ * @param reservations The bookings to group.
+ */
+export const groupByBookable = (reservations: IFarsBooking[]): Map<number, IFarsBooking[]> => {
   const m = new Map<number, IFarsBooking[]>();
   reservations.forEach(f => {
     m.set(f.bookable, (m.get(f.bookable) || []).concat(f));
@@ -183,7 +200,12 @@ export const groupByBookable = (reservations: IFarsBooking[]) => {
   return m;
 };
 
-export const groupByDate = (reservations: IFarsBooking[]) => {
+/**
+ * Helper method to group bookings by date. The date will be in the string format "YYYY-MM-DD".
+ *
+ * @param reservations The bookings to group.
+ */
+export const groupByDate = (reservations: IFarsBooking[]): Map<string, IFarsBooking[]> => {
   const m = new Map<string, IFarsBooking[]>();
   reservations.forEach(f => {
     const startDate = moment(new Date(f.start)).format("YYYY-MM-DD");
