@@ -36,4 +36,5 @@ export const myTestparameters = {
   dateFrom: new Date("1970-01-01T00:00:00+02:00"),
   dateTo: new Date("1970-01-02T00:00:00+02:00"),
   bookable: "myBookable1",
+  runThisTest: true,
 };
