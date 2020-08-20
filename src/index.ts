@@ -155,6 +155,25 @@ export const bookingsFromNow = async (days: number, bookable?: string): Promise<
   }
 };
 
+export const bookingsFromToday = async (days: number, bookable?: string): Promise<IFarsSearchResult> => {
+  const d1 = new Date();
+  d1.setHours(0);
+  d1.setMinutes(0);
+  d1.setMilliseconds(0);
+
+  const d2 = new Date(d1);
+  d2.setMinutes(d2.getMinutes() - 1);
+
+  if (days > 0) {
+    d2.setDate(d2.getDate() + days);
+
+  } else {
+    d1.setDate(d1.getDate() + days);
+  }
+
+  return bookings(d1, d2, bookable);
+};
+
 export const groupByBookable = (reservations: IFarsBooking[]) => {
   const m = new Map<number, IFarsBooking[]>();
   reservations.forEach(f => {
