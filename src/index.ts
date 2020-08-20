@@ -115,7 +115,7 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string
       return {
         start: dateFrom,
         end: dateTo,
-        bookable: bookable,
+        bookable,
         result: b,
         url,
       };
@@ -132,7 +132,7 @@ export const bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string
           return {
             start: dateFrom,
             end: dateTo,
-            bookable: bookable,
+            bookable,
             result: b,
             url,
           };
@@ -178,7 +178,6 @@ export const bookingsFromToday = async (days: number, bookable?: string): Promis
 
   if (days > 0) {
     d2.setDate(d2.getDate() + days);
-
   } else {
     d1.setDate(d1.getDate() + days);
   }
