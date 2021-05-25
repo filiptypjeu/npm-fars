@@ -1,12 +1,5 @@
-import cheerio from "cheerio";
 import moment from "moment";
-import rp from "request-promise";
-
-let farsBaseURL: string = "";
-let farsLoginPath: string = "";
-let farsApiPath: string = "";
-let farsUsername: string = "";
-let farsPassword: string = "";
+import fetch, { Response, RequestInit } from "node-fetch";
 
 interface IFarsUser {
   username: string;
@@ -37,179 +30,235 @@ interface IFarsSearchResult {
   url: string;
 }
 
-const getURL = (dateFrom?: Date, dateTo?: Date, bookable?: string): string => {
-  return (
-    `${farsApiPath}bookings?` +
-    `bookable=${bookable ? bookable : ""}` +
-    `&after=${dateFrom ? moment(dateFrom).format("YYYY-MM-DDTHH:mm:ss") : ""}` +
-    `&before=${dateTo ? moment(dateTo).format("YYYY-MM-DDTHH:mm:ss") : ""}&format=json`
-  );
-};
+interface ICookie {
+  name: string;
+  value: string;
+  expires: number;
+}
 
-const farsLogin = async (next: string) => {
-  if (!farsUsername) {
-    return Promise.reject(new Error("No username set."));
+export class FARSManager {
+  private baseURL: string;
+  private loginPath = "/login/";
+  private apiPath = "/api/";
+  private username: string;
+  private password: string;
+  private cookies: ICookie[] = [];
+
+  /**
+   * @param {string} baseURL - The base URL for FARS, with no ending '/'.
+   * @param {string | undefined} username - The login username, if authenication is needed.
+   * @param {string | undefined} password - The login password, if authenication is needed.
+   */
+  constructor(baseURL: string, username?: string, password?: string) {
+    this.baseURL = baseURL;
+    this.username = username || "";
+    this.password = password || "";
   }
 
-  if (!farsPassword) {
-    return Promise.reject(new Error("No password set."));
-  }
+  /**
+   * Create a path for a GET request.
+   */
+  private createPath = (dateFrom?: Date, dateTo?: Date, bookable?: string): string => {
+    return (
+      `${this.apiPath}bookings?` +
+      `bookable=${bookable ? bookable : ""}` +
+      `&after=${dateFrom ? moment(dateFrom).format("YYYY-MM-DDTHH:mm:ss") : ""}` +
+      `&before=${dateTo ? moment(dateTo).format("YYYY-MM-DDTHH:mm:ss") : ""}&format=json`
+    );
+  };
 
-  return rp({
-    method: "GET",
-    uri: farsBaseURL + farsLoginPath,
-    followAllRedirects: true,
-    jar: true,
-  }).then(body => {
-    const $ = cheerio.load(body);
-    const token = $('[name="csrfmiddlewaretoken"]').val();
-
-    return rp({
-      method: "POST",
-      uri: farsBaseURL + farsLoginPath,
-      followAllRedirects: true,
-      jar: true,
-      form: { username: farsUsername, password: farsPassword, csrfmiddlewaretoken: token, next },
+  /**
+   * Get the current, non-expired, cookies.
+   */
+  private getCookies = (): string => {
+    const a: string[] = [];
+    const d = Date.now();
+    this.cookies.forEach(c => {
+      if (d >= c.expires) {
+        c.value = "";
+      }
+      a.push(`${c.name}=${c.value}`);
     });
-  });
-};
 
-/**
- * @param {string} url - The base URL for FARS, with no ending '/'
- * @param {string | undefined} username - The login username, if authenication is needed.
- * @param {string | undefined} password - The login password, if authenication is needed.
- * @param {string | undefined} loginPath - Set a specific login path. The default is /login/.
- * @param {string | undefined} apiPath - Set a specific API path. The default is /api/.
- */
-export const setFarsParams = (url: string, username?: string, password?: string, loginPath?: string, apiPath?: string) => {
-  farsBaseURL = url;
-  farsLoginPath = loginPath ? loginPath : "/login/";
-  farsApiPath = apiPath ? apiPath : "/api/";
-  farsUsername = username || "";
-  farsPassword = password || "";
-};
+    this.cookies = this.cookies.filter(c => c.value != "");
 
-/**
- * Request bookings for a specific bookable and for a specific time.
- *
- * @param {Date | undefined} dateFrom - The start date from which to search bookings.
- * @param {Date | undefined} dateTo - The end date to which to search bookings.
- * @param {string | undefined} bookable - The 'bookable' in string format.
- */
-export const bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string): Promise<any> => {
-  if (!farsBaseURL) {
-    return Promise.reject(new Error("No URL set."));
+    return a.join("; ");
   }
 
-  const path = getURL(dateFrom, dateTo, bookable);
-  const url = farsBaseURL + path;
+  /**
+   * Update the current cookies based on the 'set-cookie' header in a fetch Response.
+   */
+  private updateCookies = (response: Response): void => {
+    // Get the cookies to set from the header
+    const cookies = response.headers.raw()["set-cookie"];
 
-  return rp({
-    method: "GET",
-    uri: url,
-    followAllRedirects: true,
-    jar: true,
-  })
-    .then(body => {
-      const b: IFarsBooking[] = JSON.parse(body);
+    if (!cookies) {
+      return;
+    }
+
+    // Go through all new cookies
+    cookies.forEach(cookie => {
+      const name = cookie.split("=")[0].trim();
+      const value = cookie.split("=")[1].split(";")[0].trim();
+      const expires = new Date(cookie.split("expires=")[1].split(";")[0].trim()).valueOf();
+      const oldCookie = this.cookies.find(c => c.name === name);
+
+      if (oldCookie) {
+        oldCookie.value = value;
+        oldCookie.expires = expires;
+      } else {
+        this.cookies.push({
+          name,
+          value,
+          expires,
+        });
+      }
+    });
+  }
+
+  /**
+   * Internal fetch that automatically uses and updates the cookies.
+   */
+  private farsFetch = async (url: string, method: string, body?: string): Promise<Response> => {
+    const isPost =  method.toLowerCase() == "post";
+
+    const options: RequestInit = {
+      method,
+      redirect: "manual",
+      headers: {
+        "cookie": this.getCookies(),
+        "content-type": isPost ? "application/x-www-form-urlencoded" : "" },
+    };
+
+    if (isPost) {
+      options.body = body || "";
+    }
+
+    return fetch(url, options)
+    .then(res => {
+      this.updateCookies(res);
+      return res;
+    });
+  }
+
+  /**
+   * Updates the sessionid cookie by logging in.
+   */
+  private login = async (): Promise<void> => {
+    const loginUrl = this.baseURL + this.loginPath;
+
+    const res = await this.farsFetch(loginUrl, "GET");
+
+    // Find the CSRF middleware token in the form
+    const token = (await res.text()).split("name='csrfmiddlewaretoken'")[1].split("value='")[1].split("'")[0];
+    const body = `csrfmiddlewaretoken=${token}&username=${this.username}&password=${this.password}`;//&next=${next}`;
+
+    await this.farsFetch(loginUrl, "POST", body);
+  };
+
+  /**
+   * Request bookings for a specific bookable and for a specific time.
+   *
+   * @param {Date | undefined} dateFrom - The start date from which to search bookings.
+   * @param {Date | undefined} dateTo - The end date to which to search bookings.
+   * @param {string | undefined} bookable - The 'bookable' in string format.
+   */
+  public bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string): Promise<any> => {
+    const path = this.createPath(dateFrom, dateTo, bookable);
+    const url = this.baseURL + path;
+
+    let cookies = this.getCookies();
+    if (!cookies.includes("sessionid")) {
+      await this.login();
+    }
+
+    return this.farsFetch(url, "GET")
+    .then(res => res.json())
+    .then(b => {
       return {
         start: dateFrom,
         end: dateTo,
         bookable,
         result: b,
         url,
-      };
-    })
-    .catch(async e => {
-      // Check if login is required
-      if (e.statusCode !== 403) {
-        return Promise.reject(e);
       }
-
-      return farsLogin(path)
-        .then(body => {
-          const b: IFarsBooking[] = JSON.parse(body);
-          return {
-            start: dateFrom,
-            end: dateTo,
-            bookable,
-            result: b,
-            url,
-          };
-        })
-        .catch(async error => {
-          return Promise.reject(error);
-        });
+    })
+    .catch(error => {
+      return Promise.reject(error);
     });
-};
+  };
 
-/**
- * Get FARS bookings starting from right now.
- *
- * @param days The amount of days forward/backwards to search for bookings.
- * @param bookable The bookable.
- */
-export const bookingsFromNow = async (days: number, bookable?: string): Promise<IFarsSearchResult> => {
-  const d1 = new Date();
-  const d2 = new Date(d1);
-  d2.setDate(d2.getDate() + days);
-
-  if (d1 < d2) {
-    return bookings(d1, d2, bookable);
-  } else {
-    return bookings(d2, d1, bookable);
-  }
-};
-
-/**
- * Get FARS bookings starting from today at 00:00:00.
- *
- * @param days The amount of days forward/backwards to search for bookings.
- * @param bookable The bookable.
- */
-export const bookingsFromToday = async (days: number, bookable?: string): Promise<IFarsSearchResult> => {
-  const d1 = new Date();
-  d1.setHours(0);
-  d1.setMinutes(0);
-  d1.setMilliseconds(0);
-
-  const d2 = new Date(d1);
-  d2.setMinutes(d2.getMinutes() - 1);
-
-  if (days > 0) {
+  /**
+   * Get FARS bookings starting from right now.
+   *
+   * @param days The amount of days forward/backwards to search for bookings.
+   * @param bookable The bookable.
+   */
+  public bookingsFromNow = async (days: number, bookable?: string): Promise<IFarsSearchResult> => {
+    const d1 = new Date();
+    const d2 = new Date(d1);
     d2.setDate(d2.getDate() + days);
-  } else {
-    d1.setDate(d1.getDate() + days);
-  }
 
-  return bookings(d1, d2, bookable);
-};
+    if (d1 < d2) {
+      return this.bookings(d1, d2, bookable);
+    } else {
+      return this.bookings(d2, d1, bookable);
+    }
+  };
 
-/**
- * Helper method to group bookings by the bookable.
- *
- * @param reservations The bookings to group.
- */
-export const groupByBookable = (reservations: IFarsBooking[]): Map<number, IFarsBooking[]> => {
-  const m = new Map<number, IFarsBooking[]>();
-  reservations.forEach(f => {
-    m.set(f.bookable, (m.get(f.bookable) || []).concat(f));
-  });
+  /**
+   * Get FARS bookings starting from today at 00:00:00.
+   *
+   * @param days The amount of days forward/backwards to search for bookings.
+   * @param bookable The bookable.
+   */
+  public bookingsFromToday = async (days: number, bookable?: string): Promise<IFarsSearchResult> => {
+    const d1 = new Date();
+    d1.setHours(0);
+    d1.setMinutes(0);
+    d1.setMilliseconds(0);
 
-  return m;
-};
+    const d2 = new Date(d1);
+    d2.setMinutes(d2.getMinutes() - 1);
 
-/**
- * Helper method to group bookings by date. The date will be in the string format "YYYY-MM-DD".
- *
- * @param reservations The bookings to group.
- */
-export const groupByDate = (reservations: IFarsBooking[]): Map<string, IFarsBooking[]> => {
-  const m = new Map<string, IFarsBooking[]>();
-  reservations.forEach(f => {
-    const startDate = moment(new Date(f.start)).format("YYYY-MM-DD");
-    m.set(startDate, (m.get(startDate) || []).concat(f));
-  });
+    if (days > 0) {
+      d2.setDate(d2.getDate() + days);
+    } else {
+      d1.setDate(d1.getDate() + days);
+    }
 
-  return m;
-};
+    return this.bookings(d1, d2, bookable);
+  };
+
+  /**
+   * Helper method to group bookings by the bookable.
+   *
+   * @param reservations The bookings to group.
+   */
+  public groupByBookable = (reservations: IFarsBooking[]): Map<number, IFarsBooking[]> => {
+    const m = new Map<number, IFarsBooking[]>();
+    reservations.forEach(f => {
+      m.set(f.bookable, (m.get(f.bookable) || []).concat(f));
+    });
+
+    return m;
+  };
+
+  /**
+   * Helper method to group bookings by date. The date will be in the string format "YYYY-MM-DD".
+   *
+   * @param reservations The bookings to group.
+   */
+  public groupByDate = (reservations: IFarsBooking[]): Map<string, IFarsBooking[]> => {
+    const m = new Map<string, IFarsBooking[]>();
+    reservations.forEach(f => {
+      const startDate = moment(new Date(f.start)).format("YYYY-MM-DD");
+      m.set(startDate, (m.get(startDate) || []).concat(f));
+    });
+
+    return m;
+  };
+
+}
+
+

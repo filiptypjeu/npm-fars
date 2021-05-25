@@ -21,10 +21,9 @@
   "license": "ISC",
   "types": "dist/index.d.ts",
   "devDependencies": {
-    "@types/cheerio": "^0.22.21",
     "@types/jest": "^24.9.1",
     "@types/moment": "^2.13.0",
-    "@types/request-promise": "^4.1.46",
+    "@types/node-fetch": "^2.5.10",
     "jest": "^24.9.0",
     "prettier": "^1.19.1",
     "ts-jest": "^24.3.0",
@@ -38,9 +37,8 @@
   },
   "homepage": "https://github.com/filiptypjeu/npm-fars",
   "dependencies": {
-    "cheerio": "^1.0.0-rc.3",
     "moment": "^2.27.0",
-    "request-promise": "^4.2.6"
+    "node-fetch": "^2.6.1"
   },
   "files": [
     "dist/**/*"
