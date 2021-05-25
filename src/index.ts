@@ -1,5 +1,5 @@
 import moment from "moment";
-import fetch, { Response, RequestInit } from "node-fetch";
+import fetch, { RequestInit, Response } from "node-fetch";
 
 interface IFarsUser {
   username: string;
@@ -56,107 +56,6 @@ export class FARSManager {
   }
 
   /**
-   * Create a path for a GET request.
-   */
-  private createPath = (dateFrom?: Date, dateTo?: Date, bookable?: string): string => {
-    return (
-      `${this.apiPath}bookings?` +
-      `bookable=${bookable ? bookable : ""}` +
-      `&after=${dateFrom ? moment(dateFrom).format("YYYY-MM-DDTHH:mm:ss") : ""}` +
-      `&before=${dateTo ? moment(dateTo).format("YYYY-MM-DDTHH:mm:ss") : ""}&format=json`
-    );
-  };
-
-  /**
-   * Get the current, non-expired, cookies.
-   */
-  private getCookies = (): string => {
-    const a: string[] = [];
-    const d = Date.now();
-    this.cookies.forEach(c => {
-      if (d >= c.expires) {
-        c.value = "";
-      }
-      a.push(`${c.name}=${c.value}`);
-    });
-
-    this.cookies = this.cookies.filter(c => c.value != "");
-
-    return a.join("; ");
-  }
-
-  /**
-   * Update the current cookies based on the 'set-cookie' header in a fetch Response.
-   */
-  private updateCookies = (response: Response): void => {
-    // Get the cookies to set from the header
-    const cookies = response.headers.raw()["set-cookie"];
-
-    if (!cookies) {
-      return;
-    }
-
-    // Go through all new cookies
-    cookies.forEach(cookie => {
-      const name = cookie.split("=")[0].trim();
-      const value = cookie.split("=")[1].split(";")[0].trim();
-      const expires = new Date(cookie.split("expires=")[1].split(";")[0].trim()).valueOf();
-      const oldCookie = this.cookies.find(c => c.name === name);
-
-      if (oldCookie) {
-        oldCookie.value = value;
-        oldCookie.expires = expires;
-      } else {
-        this.cookies.push({
-          name,
-          value,
-          expires,
-        });
-      }
-    });
-  }
-
-  /**
-   * Internal fetch that automatically uses and updates the cookies.
-   */
-  private farsFetch = async (url: string, method: string, body?: string): Promise<Response> => {
-    const isPost =  method.toLowerCase() == "post";
-
-    const options: RequestInit = {
-      method,
-      redirect: "manual",
-      headers: {
-        "cookie": this.getCookies(),
-        "content-type": isPost ? "application/x-www-form-urlencoded" : "" },
-    };
-
-    if (isPost) {
-      options.body = body || "";
-    }
-
-    return fetch(url, options)
-    .then(res => {
-      this.updateCookies(res);
-      return res;
-    });
-  }
-
-  /**
-   * Updates the sessionid cookie by logging in.
-   */
-  private login = async (): Promise<void> => {
-    const loginUrl = this.baseURL + this.loginPath;
-
-    const res = await this.farsFetch(loginUrl, "GET");
-
-    // Find the CSRF middleware token in the form
-    const token = (await res.text()).split("name='csrfmiddlewaretoken'")[1].split("value='")[1].split("'")[0];
-    const body = `csrfmiddlewaretoken=${token}&username=${this.username}&password=${this.password}`;//&next=${next}`;
-
-    await this.farsFetch(loginUrl, "POST", body);
-  };
-
-  /**
    * Request bookings for a specific bookable and for a specific time.
    *
    * @param {Date | undefined} dateFrom - The start date from which to search bookings.
@@ -167,25 +66,25 @@ export class FARSManager {
     const path = this.createPath(dateFrom, dateTo, bookable);
     const url = this.baseURL + path;
 
-    let cookies = this.getCookies();
+    const cookies = this.getCookies();
     if (!cookies.includes("sessionid")) {
       await this.login();
     }
 
     return this.farsFetch(url, "GET")
-    .then(res => res.json())
-    .then(b => {
-      return {
-        start: dateFrom,
-        end: dateTo,
-        bookable,
-        result: b,
-        url,
-      }
-    })
-    .catch(error => {
-      return Promise.reject(error);
-    });
+      .then(res => res.json())
+      .then(b => {
+        return {
+          start: dateFrom,
+          end: dateTo,
+          bookable,
+          result: b,
+          url,
+        };
+      })
+      .catch(error => {
+        return Promise.reject(error);
+      });
   };
 
   /**
@@ -259,6 +158,115 @@ export class FARSManager {
     return m;
   };
 
+  /**
+   * Create a path for a GET request.
+   */
+  private createPath = (dateFrom?: Date, dateTo?: Date, bookable?: string): string => {
+    return (
+      `${this.apiPath}bookings?` +
+      `bookable=${bookable ? bookable : ""}` +
+      `&after=${dateFrom ? moment(dateFrom).format("YYYY-MM-DDTHH:mm:ss") : ""}` +
+      `&before=${dateTo ? moment(dateTo).format("YYYY-MM-DDTHH:mm:ss") : ""}&format=json`
+    );
+  };
+
+  /**
+   * Get the current, non-expired, cookies.
+   */
+  private getCookies = (): string => {
+    const a: string[] = [];
+    const d = Date.now();
+    this.cookies.forEach(c => {
+      if (d >= c.expires) {
+        c.value = "";
+      }
+      a.push(`${c.name}=${c.value}`);
+    });
+
+    this.cookies = this.cookies.filter(c => c.value !== "");
+
+    return a.join("; ");
+  };
+
+  /**
+   * Update the current cookies based on the 'set-cookie' header in a fetch Response.
+   */
+  private updateCookies = (response: Response): void => {
+    // Get the cookies to set from the header
+    const cookies = response.headers.raw()["set-cookie"];
+
+    if (!cookies) {
+      return;
+    }
+
+    // Go through all new cookies
+    cookies.forEach(cookie => {
+      const name = cookie.split("=")[0].trim();
+      const value = cookie
+        .split("=")[1]
+        .split(";")[0]
+        .trim();
+      const expires = new Date(
+        cookie
+          .split("expires=")[1]
+          .split(";")[0]
+          .trim()
+      ).valueOf();
+      const oldCookie = this.cookies.find(c => c.name === name);
+
+      if (oldCookie) {
+        oldCookie.value = value;
+        oldCookie.expires = expires;
+      } else {
+        this.cookies.push({
+          name,
+          value,
+          expires,
+        });
+      }
+    });
+  };
+
+  /**
+   * Internal fetch that automatically uses and updates the cookies.
+   */
+  private farsFetch = async (url: string, method: string, body?: string): Promise<Response> => {
+    const isPost = method.toLowerCase() === "post";
+
+    const options: RequestInit = {
+      method,
+      redirect: "manual",
+      headers: {
+        cookie: this.getCookies(),
+        "content-type": isPost ? "application/x-www-form-urlencoded" : "",
+      },
+    };
+
+    if (isPost) {
+      options.body = body || "";
+    }
+
+    return fetch(url, options).then(res => {
+      this.updateCookies(res);
+      return res;
+    });
+  };
+
+  /**
+   * Updates the sessionid cookie by logging in.
+   */
+  private login = async (): Promise<void> => {
+    const loginUrl = this.baseURL + this.loginPath;
+
+    const res = await this.farsFetch(loginUrl, "GET");
+
+    // Find the CSRF middleware token in the form
+    const token = (await res.text())
+      .split("name='csrfmiddlewaretoken'")[1]
+      .split("value='")[1]
+      .split("'")[0];
+    const body = `csrfmiddlewaretoken=${token}&username=${this.username}&password=${this.password}`; // &next=${next}`;
+
+    await this.farsFetch(loginUrl, "POST", body);
+  };
 }
-
-
