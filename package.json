@@ -15,6 +15,7 @@
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run format && npm run lint-fix",
     "test": "jest --config jestconfig.json --coverage",
+    "test-no-coverage": "jest --config jestconfig.json",
     "version": "npm run format && git add -A src"
   },
   "author": "Filip Stenbacka",
@@ -24,9 +25,9 @@
     "@types/jest": "^24.9.1",
     "@types/moment": "^2.13.0",
     "@types/node-fetch": "^2.5.10",
-    "jest": "^24.9.0",
+    "jest": "26.6.3",
     "prettier": "^1.19.1",
-    "ts-jest": "^24.3.0",
+    "ts-jest": "^26.5.6",
     "tslint": "^5.20.1",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.9.7"
@@ -38,7 +39,8 @@
   "homepage": "https://github.com/filiptypjeu/npm-fars",
   "dependencies": {
     "moment": "^2.27.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "update": "^0.7.4"
   },
   "files": [
     "dist/**/*"
