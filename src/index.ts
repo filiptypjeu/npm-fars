@@ -1,13 +1,13 @@
 import moment from "moment";
 import fetch, { RequestInit, Response } from "node-fetch";
 
-interface IFarsUser {
+export interface IFarsUser {
   username: string;
   first_name: string;
   last_name: string;
 }
 
-interface IFarsBookingGroup {
+export interface IFarsBookingGroup {
   name: string;
 }
 
@@ -22,7 +22,7 @@ export interface IFarsBooking {
   repeatgroup: number | null;
 }
 
-interface IFarsSearchResult {
+export interface IFarsSearchResult {
   start?: Date;
   end?: Date;
   bookable?: string;
@@ -270,3 +270,5 @@ export class FARSManager {
     await this.farsFetch(loginUrl, "POST", body);
   };
 }
+
+export default FARSManager;
