@@ -54,7 +54,7 @@ export class FARSManager extends WebLoginManager {
    * @param {Date | undefined} dateTo - The end date to which to search bookings.
    * @param {string | undefined} bookable - The 'bookable' in string format.
    */
-  public bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string): Promise<any> => {
+  public bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string): Promise<IFarsSearchResult> => {
     const path = this.createPath(dateFrom, dateTo, bookable);
 
     return this.fetch(path)
