@@ -98,21 +98,27 @@ export class FARSManager extends WebLoginManager {
   /**
    * Get FARS bookings starting from today at 00:00:00.
    *
-   * @param days The amount of days forward/backwards to search for bookings.
+   * @param days The amount of days forward/backwards to search for bookings. 0 = today, 1 += tomorrow, -1 += yesterday
    * @param bookable The bookable.
    */
   public bookingsFromToday = async (days: number, bookable?: string): Promise<IFarsSearchResult> => {
+    // Set start date today
     const d1 = new Date();
     d1.setHours(0);
     d1.setMinutes(0);
+    d1.setSeconds(0);
     d1.setMilliseconds(0);
 
+    // Set end date to end of today
     const d2 = new Date(d1);
-    d2.setMinutes(d2.getMinutes() - 1);
+    d2.setMilliseconds(d2.getMilliseconds() - 1);
+    d2.setDate(d2.getDate() + 1);
 
     if (days > 0) {
+      // Move end date forwards
       d2.setDate(d2.getDate() + days);
     } else {
+      // Move start date backwards
       d1.setDate(d1.getDate() + days);
     }
 
