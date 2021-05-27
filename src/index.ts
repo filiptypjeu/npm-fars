@@ -56,16 +56,20 @@ export class FARSManager extends WebLoginManager {
    */
   public bookings = async (dateFrom?: Date, dateTo?: Date, bookable?: string): Promise<IFarsSearchResult> => {
     const path = this.createPath(dateFrom, dateTo, bookable);
+    let url = "";
 
     return this.fetch(path)
-      .then(res => res.json())
+      .then(res => {
+        url = res.url;
+        return res.json();
+      })
       .then(b => {
         return {
           start: dateFrom,
           end: dateTo,
           bookable,
           result: b,
-          url: path,
+          url,
         };
       })
       .catch(error => {
