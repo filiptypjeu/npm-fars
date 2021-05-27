@@ -44,7 +44,7 @@ export class FARSManager extends WebLoginManager {
       loginPath: "/login/",
       sessionidCookieName: "sessionid",
       middlewaretokenName: "csrfmiddlewaretoken",
-    })
+    });
   }
 
   /**

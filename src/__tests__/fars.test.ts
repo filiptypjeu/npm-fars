@@ -19,27 +19,27 @@ const testDateToday = (expected: Date, provided: Date) => {
   expect(expected.getFullYear()).toEqual(provided.getFullYear());
   expect(expected.getMonth()).toEqual(provided.getMonth());
   expect(expected.getDate()).toEqual(provided.getDate());
-}
+};
 
 const testDateNow = (expected: Date, provided: Date) => {
   testDateToday(expected, provided);
   expect(expected.getHours()).toEqual(provided.getHours());
   expect(expected.getMinutes()).toEqual(provided.getMinutes());
-}
+};
 
 const testDateMidnight = (provided: Date) => {
   expect(provided.getHours()).toEqual(0);
   expect(provided.getMinutes()).toEqual(0);
   expect(provided.getSeconds()).toEqual(0);
   expect(provided.getMilliseconds()).toEqual(0);
-}
+};
 
 const testDateAlmostMidnight = (provided: Date) => {
   expect(provided.getHours()).toEqual(23);
   expect(provided.getMinutes()).toEqual(59);
   expect(provided.getSeconds()).toEqual(59);
   expect(provided.getMilliseconds()).toEqual(999);
-}
+};
 
 const fars = new FARSManager(myBaseURL, myUsername, myPassword);
 
