@@ -1,4 +1,4 @@
-import { FARSManager, IFarsBooking } from "../index";
+import { FARSManager, IFarsBooking, IFarsUser } from "../index";
 import { myBaseURL, myUsername, myPassword, myBookables, myBroadCases, mySpecificCase } from "./variables/fars.test_variables";
 
 const testObject = (b: IFarsBooking) => {
@@ -180,3 +180,23 @@ if (mySpecificCase.runThisTest) {
     expect(a.result[0]).toEqual(mySpecificCase.result);
   }, 10000);
 }
+
+test("toString user", async () => {
+  const user: IFarsUser = {
+    first_name: "Firstname",
+    last_name: "Lastname",
+    username: "username123",
+  };
+  expect(fars.toString(user)).toEqual("Firstname Lastname (username123)");
+
+  user.last_name = "";
+  expect(fars.toString(user)).toEqual("Firstname (username123)");
+
+  user.first_name = "";
+  expect(fars.toString(user)).toEqual("username123");
+
+  user.first_name = "First";
+  user.last_name = "Last";
+  user.username = "";
+  expect(fars.toString(user)).toEqual("First Last");
+});

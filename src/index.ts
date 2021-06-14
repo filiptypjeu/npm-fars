@@ -47,6 +47,16 @@ export class FARSManager extends WebLoginManager {
     });
   }
 
+  public toString = (user: IFarsUser): string => {
+    const name = [user.first_name, user.last_name].join(" ").trim();
+
+    if (name && user.username) {
+      return `${name} (${user.username})`;
+    }
+
+    return [name, user.username].join(" ").trim();
+  };
+
   /**
    * Request bookings for a specific bookable and for a specific time.
    *
