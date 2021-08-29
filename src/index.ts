@@ -47,7 +47,7 @@ export class FARSManager extends WebLoginManager {
     });
   }
 
-  public toString = (user: IFarsUser): string => {
+  public override toString = (user: IFarsUser): string => {
     const name = [user.first_name, user.last_name].join(" ").trim();
 
     if (name && user.username) {
@@ -74,6 +74,9 @@ export class FARSManager extends WebLoginManager {
         return res.json();
       })
       .then(b => {
+        if (!Array.isArray(b)) {
+          throw new Error(`Failed to fetch bookings at ${url}`);
+        }
         return {
           start: dateFrom,
           end: dateTo,

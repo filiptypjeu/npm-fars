@@ -47,6 +47,10 @@ test("bookings nourl", async () => {
   await expect(new FARSManager("", myUsername, myPassword).bookings()).rejects.toThrowError();
 }, 5000);
 
+test("bookings wrong login", async () => {
+  await expect(new FARSManager(myBaseURL, myUsername, "myPassword").bookings()).rejects.toThrowError();
+}, 5000);
+
 if (myBroadCases.runThisTest) {
   test("bookings start", async () => {
     const a = await fars.bookings(myBroadCases.dateFrom, undefined, myBroadCases.bookable);
