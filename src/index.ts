@@ -88,11 +88,11 @@ export class FARSManager extends WebLoginManager {
   public getBookables = async (forceUpdate = false): Promise<IFarsBookable[]> => {
     if (forceUpdate || !this.m_bookables.length) {
       this.m_bookables = await this.fetch(this.getApiPath("bookables"))
-      .then(res => res.json())
-      .catch(error => Promise.reject(error));
+        .then(res => res.json())
+        .catch(error => Promise.reject(error));
     }
     return this.m_bookables;
-  }
+  };
 
   private isBookingsPage(page: any): page is IPage<IFarsBooking> {
     if ("results" in page && Array.isArray(page.results)) {
@@ -124,7 +124,7 @@ export class FARSManager extends WebLoginManager {
           result: page.results,
           queryParameters: params || {},
           url,
-        }
+        };
       })
       .catch(error => {
         return Promise.reject(error);
@@ -137,7 +137,10 @@ export class FARSManager extends WebLoginManager {
    * @param days The amount of days forward/backwards to search for bookings.
    * @param bookable The bookable.
    */
-  public bookingsFromNow = async (days: number, params?: Omit<IFarsBookingQueryParameters, "after" | "before">): Promise<IFarsSearchResult> => {
+  public bookingsFromNow = async (
+    days: number,
+    params?: Omit<IFarsBookingQueryParameters, "after" | "before">
+  ): Promise<IFarsSearchResult> => {
     const newParams: IFarsBookingQueryParameters = { ...params };
     const d1 = new Date();
     const d2 = new Date(d1);
@@ -159,7 +162,10 @@ export class FARSManager extends WebLoginManager {
    * @param days The amount of days forward/backwards to search for bookings. 0 = today, 1 += tomorrow, -1 += yesterday
    * @param bookable The bookable.
    */
-  public bookingsFromToday = async (days: number, params?: Omit<IFarsBookingQueryParameters, "after" | "before">): Promise<IFarsSearchResult> => {
+  public bookingsFromToday = async (
+    days: number,
+    params?: Omit<IFarsBookingQueryParameters, "after" | "before">
+  ): Promise<IFarsSearchResult> => {
     // Set start date today
     const d1 = new Date();
     d1.setHours(0);
@@ -226,10 +232,9 @@ export class FARSManager extends WebLoginManager {
     if (params?.before) query.before = this.encodeDate(params.before);
 
     return `/api/${endpoint}?` + querystring.stringify(query);
-  };
+  }
 
   private encodeDate = (date?: Date) => date && moment(date).format("YYYY-MM-DDTHH:mm:ss");
-
 }
 
 export default FARSManager;
