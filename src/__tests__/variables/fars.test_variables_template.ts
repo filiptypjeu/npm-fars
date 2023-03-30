@@ -1,47 +1,62 @@
-/**
- * Variables
- */
-export const myBaseURL = "";
-export const myUsername = "";
-export const myPassword = "";
+import { IFarsBookable, IFarsBooking, IFarsBookingQueryParameters, IPage } from "../..";
 
-/**
- * Bookables
- */
-export const myBookables = ["myBookable1", "myBookable2", "myBookable3"];
+export interface Variables {
+    myBaseURL: string;
+    myUsername: string;
+    myPassword: string;
+    myBookables: IFarsBookable[];
+    mySpecificCase: {
+        runThisTest: boolean;
+        queryParameters: IFarsBookingQueryParameters;
+        resultPage: IPage<IFarsBooking>;
+    };
+}
 
-/**
- * Test broad cases, where the fetches gives at least 2 bookings.
- */
-export const myBroadCases = {
-  runThisTest: false,
-  dateFrom: new Date("2020-01-01T00:00:00+02:00"),
-  dateTo: new Date("2021-01-01T00:00:00+02:00"),
-  bookable: "myBookable1",
+const variables: Variables = {
+    /**
+     * Login information
+     */
+    myBaseURL: "",
+    myUsername: "",
+    myPassword: "",
+
+    /**
+     * Bookables
+     */
+    myBookables: [],
+
+    /**
+     * Test a specific case
+     */
+    mySpecificCase: {
+        runThisTest: false,
+        queryParameters: {
+            after: new Date("2020-01-01T00:00:00+02:00"),
+            before: new Date("2020-01-02T00:00:00+02:00"),
+            bookable: "myBookable1",
+        },
+        resultPage: {
+            count: 1,
+            next: null,
+            previous: null,
+            results: [
+                {
+                    id: 42,
+                    user: {
+                        username: "",
+                        first_name: "",
+                        last_name: "",
+                    },
+                    booking_group: null,
+                    start: "2020-01-01T00:00:00+02:00",
+                    end: "2020-01-02T00:00:00+02:00",
+                    comment: "",
+                    bookable: 1,
+                    repeatgroup: null,
+                }
+            ]
+        },
+    }
 };
 
-/**
- * Test specific case, where the fetch only gets one result.
- */
-export const mySpecificCase = {
-  runThisTest: false,
-  parameters: {
-    dateFrom: new Date("2020-01-01T00:00:00+02:00"),
-    dateTo: new Date("2020-01-02T00:00:00+02:00"),
-    bookable: "myBookable1",
-  },
-  result: {
-    id: 42,
-    user: {
-      username: "",
-      first_name: "",
-      last_name: "",
-    },
-    booking_group: null,
-    start: "2020-01-01T00:00:00+02:00",
-    end: "2020-01-02T00:00:00+02:00",
-    comment: "",
-    bookable: 1,
-    repeatgroup: null,
-  },
-};
+export default variables;
