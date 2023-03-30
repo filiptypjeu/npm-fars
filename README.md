@@ -3,19 +3,25 @@ With this NPM package you can easily request info from [FARS](https://github.com
 
 ## Usage
 ```ts
-// Set the URL and login to FARS
-setFarsParams(url: string, username?: string, password?: string, loginPath: string = "/login/", apiPath: string = "/api/)
+// Create FARS manager
+const fars = new FARSManager(url: string, username?: string, password?: string)
+
+// Request bookables
+fars.getBookables(): Promise<IFarsBookable>
 
 // Request bookings
-bookings(dateFrom?: Date, dateTo?: Date, bookable?: string): Promise<IFarsSearchResult>
+fars.bookings(queryParameters: { after?: Date, before?: Date, bookable?: string, limit?: number }): Promise<IFarsSearchResult>
 
 // Request bookings during a certain number of days into the future
-bookingsFromNow(days: number, bookable?: string): Promise<IFarsSearchResult>
+fars.bookingsFromNow(days: number, queryParameters): Promise<IFarsSearchResult>
+
+// Request bookings during a certain number of days into the future
+fars.bookingsFromToday(days: number, queryParameters): Promise<IFarsSearchResult>
 
 // Group an array of bookings by the bookable
-groupByBookable(reservations: IFarsBooking[]): Promise<Map<string, IFarsBooking[]>>;
+fars.groupByBookable(reservations: IFarsBooking[]): Map<string, IFarsBooking[]>;
 
 // Group an array of bookings by start date
-groupByDate = (reservations: IFarsBooking[]): Promise<Map<string, IFarsBooking[]>>;
+fars.groupByDate = (reservations: IFarsBooking[]): Map<string, IFarsBooking[]>;
 ```
 
