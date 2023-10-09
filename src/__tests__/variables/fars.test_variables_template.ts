@@ -1,14 +1,14 @@
-import { IFarsBookable, IFarsBooking, IFarsBookingQueryParameters, IPage } from "../..";
+import { API, FARS } from "../..";
 
 export interface Variables {
-  myBaseURL: string;
-  myUsername: string;
-  myPassword: string;
-  myBookables: IFarsBookable[];
-  mySpecificCase: {
-    runThisTest: boolean;
-    queryParameters: IFarsBookingQueryParameters;
-    resultPage: IPage<IFarsBooking>;
+  apiBaseUrl: string;
+  username: string;
+  password: string;
+  bookables: string[];
+  specific_case: {
+    run_this_test: boolean;
+    query_parameters: Partial<API["bookings"]["list_filters"]>;
+    result: API["bookings"]["list"];
   };
 }
 
@@ -16,45 +16,38 @@ const variables: Variables = {
   /**
    * Login information
    */
-  myBaseURL: "",
-  myUsername: "",
-  myPassword: "",
+  apiBaseUrl: "",
+  username: "",
+  password: "",
 
   /**
    * Bookables
    */
-  myBookables: [],
+  bookables: [],
 
   /**
    * Test a specific case
    */
-  mySpecificCase: {
-    runThisTest: false,
-    queryParameters: {
-      after: new Date("2020-01-01T00:00:00+02:00"),
-      before: new Date("2020-01-02T00:00:00+02:00"),
+  specific_case: {
+    run_this_test: false,
+    query_parameters: {
+      after: FARS.encodeDate("2020-01-01T00:00:00"),
+      before: FARS.encodeDate("2020-01-02T00:00:00"),
       bookable: "myBookable1",
     },
-    resultPage: {
-      count: 1,
-      next: null,
-      previous: null,
-      results: [
-        {
-          id: 42,
-          user: {
-            username: "",
-            first_name: "",
-            last_name: "",
-          },
-          booking_group: null,
-          start: "2020-01-01T00:00:00+02:00",
-          end: "2020-01-02T00:00:00+02:00",
-          comment: "",
-          bookable: 1,
-          repeatgroup: null,
-        },
-      ],
+    result: {
+      id: 42,
+      user: {
+        username: "",
+        first_name: "",
+        last_name: "",
+      },
+      booking_group: null,
+      start: "2020-01-01T00:00:00",
+      end: "2020-01-02T00:00:00",
+      comment: "",
+      bookable: 1,
+      repeatgroup: null,
     },
   },
 };

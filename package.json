@@ -7,12 +7,12 @@
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "link": "pnpm run build && pnpm link",
-    "lint": "tslint -p tsconfig.json",
-    "lint-fix": "tslint -p tsconfig.json --fix",
+    "lint": "eslint src --ext .ts",
+    "lint-fix": "eslint src --ext .ts --fix",
     "postversion": "git push && git push --tags",
-    "prepare": "pnpm run build",
+    "prepare": "rm -rf dist && pnpm run build",
     "prepublishOnly": "pnpm run test && pnpm run lint",
-    "preversion": "pnpm run format && npm run lint-fix",
+    "preversion": "pnpm run lint",
     "test": "jest --config jestconfig.json",
     "test-coverage": "jest --config jestconfig.json --coverage",
     "version": "pnpm run format && git add -A src"
@@ -22,12 +22,13 @@
   "types": "dist/index.d.ts",
   "devDependencies": {
     "@types/jest": "^27.0.1",
-    "@types/moment": "^2.13.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.51.0",
+    "eslint-config-prettier": "^8.10.0",
     "jest": "^27.0.4",
     "prettier": "^2.3.1",
     "ts-jest": "^27.0.3",
-    "tslint": "^6.1.3",
-    "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.3.2"
   },
   "repository": {
@@ -36,8 +37,7 @@
   },
   "homepage": "https://github.com/filiptypjeu/npm-fars",
   "dependencies": {
-    "moment": "^2.29.1",
-    "web-login-manager": "^1.0.2"
+    "json-endpoints": "^1.1.0"
   },
   "files": [
     "dist/**/*"
